@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-collector-monitor
+  namespace: opentelemetry # Debe estar donde instalaste el Prometheus Operator
+  labels:
+    release: prometheus-stack # Etiqueta clave para que el Operator lo detecte
+spec:
+  selector:
+    matchLabels:
+      # Asegúrate que esto coincida con las etiquetas de tu servicio OTel
+      # Puedes verificarlas con: kubectl get svc -n opentelemetry --show-labels
+      app.kubernetes.io/name: opentelemetry-collector
+  namespaceSelector:
+    matchNames:
+      - opentelemetry
+  endpoints:
+    - port: prometheus # Debe coincidir con el nombre del puerto en otel-values.yaml
+      interval: 10s
+      path: /metrics
