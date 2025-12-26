@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: dragonball-quarkus-api-native
+  namespace: opentelemetry
+  labels:
+    # Esta etiqueta es OBLIGATORIA para que tu Prometheus la detecte.
+    # Si usaste helm kube-prometheus-stack, suele ser 'release: prometheus-stack'
+    # o 'release: prometheus'. Verifica con: kubectl get prometheus -n opentelemetry --show-labels
+    release: prometheus-stack 
+spec:
+  selector:
+    matchLabels:
+      # Aquí le decimos: "Busca el Service que tenga esta etiqueta"
+      app: dragonball-quarkus-api-native
+  endpoints:
+    - port: http-api   # <--- Debe coincidir con el 'name' que pusimos en el Service
+      path: /q/metrics # La ruta de Quarkus
+      interval: 15s
+  namespaceSelector:
+    matchNames:
+      - default

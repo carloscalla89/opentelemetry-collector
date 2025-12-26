@@ -162,6 +162,13 @@ config:
         tags:
           - "env:demo-minikube"
           - "source:otel-collector"
+    # Usamos el exportador HTTP estándar
+    otlphttp/logstash:
+      # Apuntamos al puerto HTTP de Logstash
+      endpoint: "http://logstash.elk.svc.cluster.local:5000"
+      tls:
+        insecure: true # Importante: Dentro del clúster no solemos usar TLS para esto
+      encoding: json    
     prometheus:
       endpoint: "0.0.0.0:8889"
       # Habilita esto para que las etiquetas de OTel (pod, namespace) pasen a Prometheus
@@ -176,12 +183,18 @@ config:
       traces:
         receivers: [ otlp ]
         processors: [ resourcedetection, k8sattributes, resource, batch ]
-        exporters: [ otlp/elastic, datadog/connector, debug ]
+        #exporters: [ otlp/elastic, datadog/connector, debug ]
+        # Enviamos traces a Logstash y al debug
+        exporters: [debug]
       metrics:
-        receivers: [ datadog/connector, otlp, hostmetrics]
+        #receivers: [ datadog/connector, otlp, hostmetrics]
+        receivers: [ otlp, hostmetrics]
         processors: [ batch ]
-        exporters: [ datadog/exporter, prometheus ]
+        #exporters: [ datadog/exporter, prometheus ]
+        # Las métricas se quedan en Prometheus (Grafana)
+        exporters: [ prometheus ]
       logs:
         receivers: [ otlp, filelog]
         processors: [k8sattributes, resource, filter, batch]
-        exporters: [ otlp/elastic, debug ]
+        #exporters: [ otlp/elastic, debug ]
+        exporters: [otlphttp/logstash, debug]
